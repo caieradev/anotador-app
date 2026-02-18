@@ -59,6 +59,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access to record meetings</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app uses speech recognition to transcribe meetings in real-time</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

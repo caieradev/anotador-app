@@ -26,6 +26,10 @@
 	<string>$(PRODUCT_COPYRIGHT)</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access to record meetings</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app uses speech recognition to transcribe meetings in real-time</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
