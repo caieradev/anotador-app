@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -28,11 +29,14 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
   AuthNotifier(this._client) : super(const AppAuthState());
 
   Future<void> signInWithEmail(String email, String password) async {
+    debugPrint('[Auth] signIn: $email');
     state = const AppAuthState(status: AppAuthStatus.loading);
     try {
-      await _client.auth.signInWithPassword(email: email, password: password);
+      final response = await _client.auth.signInWithPassword(email: email, password: password);
+      debugPrint('[Auth] signIn success, user: ${response.user?.id}');
       state = const AppAuthState();
     } catch (e) {
+      debugPrint('[Auth] signIn error: $e');
       state = AppAuthState(error: e.toString());
     }
   }
@@ -42,15 +46,18 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
     String password,
     String name,
   ) async {
+    debugPrint('[Auth] signUp: $email, name: $name');
     state = const AppAuthState(status: AppAuthStatus.loading);
     try {
-      await _client.auth.signUp(
+      final response = await _client.auth.signUp(
         email: email,
         password: password,
         data: {'name': name},
       );
+      debugPrint('[Auth] signUp success, user: ${response.user?.id}, session: ${response.session != null}');
       state = const AppAuthState(status: AppAuthStatus.signUpSuccess);
     } catch (e) {
+      debugPrint('[Auth] signUp error: $e');
       state = AppAuthState(error: e.toString());
     }
   }
@@ -60,6 +67,7 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
   }
 
   Future<void> signOut() async {
+    debugPrint('[Auth] signOut');
     await _client.auth.signOut();
     state = const AppAuthState();
   }

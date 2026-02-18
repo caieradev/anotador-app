@@ -70,7 +70,9 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
 
   Future<void> startRecording({String? language}) async {
     try {
+      debugPrint('[Recording] Requesting mic permission...');
       final hasPermission = await _recorder.hasPermission();
+      debugPrint('[Recording] Mic permission: $hasPermission');
       if (!hasPermission) {
         state = state.copyWith(
           status: RecordingStatus.error,
@@ -82,6 +84,7 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
       final tempDir = await getTemporaryDirectory();
       final id = const Uuid().v4();
       _filePath = '${tempDir.path}/recording_$id.m4a';
+      debugPrint('[Recording] File path: $_filePath');
 
       await _recorder.start(
         const RecordConfig(
@@ -91,15 +94,18 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
         ),
         path: _filePath!,
       );
+      debugPrint('[Recording] Recorder started');
 
       // Create meeting in Supabase
       final user = _ref.read(currentUserProvider);
+      debugPrint('[Recording] User: ${user?.id}');
       if (user != null) {
         final meeting = await _meetingRepository.createMeeting(
           userId: user.id,
           type: state.meetingType,
           language: language,
         );
+        debugPrint('[Recording] Meeting created: ${meeting.id}');
         state = state.copyWith(
           status: RecordingStatus.recording,
           elapsedSeconds: 0,
@@ -107,6 +113,7 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
           meeting: meeting,
         );
       } else {
+        debugPrint('[Recording] WARNING: No user logged in!');
         state = state.copyWith(
           status: RecordingStatus.recording,
           elapsedSeconds: 0,
@@ -114,7 +121,9 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
       }
 
       _startTimer();
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[Recording] ERROR startRecording: $e');
+      debugPrint('[Recording] Stack: $st');
       state = state.copyWith(
         status: RecordingStatus.error,
         errorMessage: 'Erro ao iniciar gravacao: $e',
@@ -124,18 +133,22 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
 
   Future<void> stopRecording({String? rawTranscript}) async {
     try {
+      debugPrint('[Recording] Stopping recording...');
       _stopTimer();
       final path = await _recorder.stop();
+      debugPrint('[Recording] Recorder stopped, path: $path');
       state = state.copyWith(status: RecordingStatus.stopped);
 
       if (path != null && state.meetingId != null) {
         state = state.copyWith(status: RecordingStatus.uploading);
+        debugPrint('[Recording] Uploading audio for meeting: ${state.meetingId}');
 
         final user = _ref.read(currentUserProvider);
         if (user != null) {
           // Read audio file
           final file = File(path);
           final audioData = await file.readAsBytes();
+          debugPrint('[Recording] Audio file size: ${audioData.length} bytes');
 
           // Upload audio to Supabase Storage
           final storagePath = await _meetingRepository.uploadAudio(
@@ -144,6 +157,7 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
             audioData,
             'm4a',
           );
+          debugPrint('[Recording] Uploaded to storage: $storagePath');
 
           // Update meeting with audio URL, transcript, and status
           final updateData = <String, dynamic>{
@@ -155,12 +169,14 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
 
           if (rawTranscript != null && rawTranscript.isNotEmpty) {
             updateData['raw_transcript'] = rawTranscript;
+            debugPrint('[Recording] Raw transcript length: ${rawTranscript.length}');
           }
 
           await _meetingRepository.updateMeeting(
             state.meetingId!,
             updateData,
           );
+          debugPrint('[Recording] Meeting updated to processing');
 
           // Trigger backend processing (fire-and-forget)
           _triggerProcessing(state.meetingId!);
@@ -168,12 +184,16 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
           // Clean up temp file
           if (await file.exists()) {
             await file.delete();
+            debugPrint('[Recording] Temp file cleaned up');
           }
         }
 
         state = state.copyWith(status: RecordingStatus.stopped);
+        debugPrint('[Recording] Done!');
       }
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[Recording] ERROR stopRecording: $e');
+      debugPrint('[Recording] Stack: $st');
       state = state.copyWith(
         status: RecordingStatus.error,
         errorMessage: 'Erro ao parar gravacao: $e',
@@ -184,9 +204,11 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
   Future<void> _triggerProcessing(String meetingId) async {
     try {
       final url = '${AppConstants.backendUrl}/api/meetings/$meetingId/process';
-      await http.post(Uri.parse(url));
+      debugPrint('[Recording] Triggering backend: $url');
+      final response = await http.post(Uri.parse(url));
+      debugPrint('[Recording] Backend response: ${response.statusCode} ${response.body}');
     } catch (e) {
-      debugPrint('Erro ao disparar processamento: $e');
+      debugPrint('[Recording] ERROR triggering backend: $e');
     }
   }
 

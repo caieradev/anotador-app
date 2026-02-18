@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -20,10 +21,13 @@ class MeetingsNotifier extends StateNotifier<AsyncValue<List<Meeting>>> {
 
   Future<void> _loadMeetings() async {
     try {
+      debugPrint('[Meetings] Loading meetings...');
       state = const AsyncLoading();
       final meetings = await _repository.getMeetings();
+      debugPrint('[Meetings] Loaded ${meetings.length} meetings');
       state = AsyncData(meetings);
     } catch (e, st) {
+      debugPrint('[Meetings] ERROR loading: $e');
       state = AsyncError(e, st);
     }
   }
@@ -43,6 +47,7 @@ class MeetingsNotifier extends StateNotifier<AsyncValue<List<Meeting>>> {
   }
 
   void _handleRealtimeEvent(PostgresChangePayload payload) {
+    debugPrint('[Meetings] Realtime event: ${payload.eventType}');
     final currentData = state.valueOrNull;
     if (currentData == null) return;
 

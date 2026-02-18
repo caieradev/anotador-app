@@ -52,8 +52,10 @@ class SpeechNotifier extends StateNotifier<SpeechState> {
 
   Future<void> initialize() async {
     try {
+      debugPrint('[Speech] Initializing...');
       final available = await _speech.initialize(
         onError: (error) {
+          debugPrint('[Speech] Error: ${error.errorMsg} (permanent: ${error.permanent})');
           // If we get a "no match" error while listening, restart listening
           if (error.errorMsg == 'error_no_match' &&
               state.status == SpeechStatus.listening) {
@@ -65,6 +67,7 @@ class SpeechNotifier extends StateNotifier<SpeechState> {
           }
         },
         onStatus: (status) {
+          debugPrint('[Speech] Status changed: $status');
           if (status == 'done' && state.status == SpeechStatus.listening) {
             // Commit current words and restart listening
             _commitCurrentWords();
@@ -73,12 +76,14 @@ class SpeechNotifier extends StateNotifier<SpeechState> {
         },
       );
 
+      debugPrint('[Speech] Available: $available');
       if (available && mounted) {
         state = state.copyWith(status: SpeechStatus.available);
       }
-    } catch (e) {
+    } catch (e, st) {
       // Speech not available on this device - that's ok
-      debugPrint('Speech init error: $e');
+      debugPrint('[Speech] Init error: $e');
+      debugPrint('[Speech] Stack: $st');
     }
   }
 
@@ -87,6 +92,7 @@ class SpeechNotifier extends StateNotifier<SpeechState> {
   }
 
   Future<void> startListening() async {
+    debugPrint('[Speech] startListening called, status: ${state.status}');
     if (state.status == SpeechStatus.unavailable) return;
 
     state = state.copyWith(
@@ -107,6 +113,7 @@ class SpeechNotifier extends StateNotifier<SpeechState> {
 
   void _onSpeechResult(SpeechRecognitionResult result) {
     if (!mounted) return;
+    debugPrint('[Speech] Result: final=${result.finalResult}, words="${result.recognizedWords}"');
 
     if (result.finalResult) {
       final newTranscript = state.transcript.isEmpty
