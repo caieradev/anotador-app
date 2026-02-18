@@ -9,6 +9,7 @@ import '../../features/meetings/presentation/screens/home_screen.dart';
 import '../../features/meetings/presentation/screens/meeting_detail_screen.dart';
 import '../../features/recording/presentation/screens/recording_screen.dart';
 import '../../features/action_items/presentation/screens/action_items_screen.dart';
+import '../../features/reminders/presentation/screens/reminders_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -78,6 +79,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
+                path: '/reminders',
+                builder: (context, state) => const RemindersScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
                 path: '/settings',
                 builder: (context, state) => const SettingsScreen()),
           ]),
@@ -111,6 +117,8 @@ class ScaffoldWithNavBar extends StatelessWidget {
                 NavigationRailDestination(
                     icon: Icon(Icons.checklist), label: Text('Acoes')),
                 NavigationRailDestination(
+                    icon: Icon(Icons.notifications), label: Text('Lembretes')),
+                NavigationRailDestination(
                     icon: Icon(Icons.settings), label: Text('Config')),
               ],
             ),
@@ -130,6 +138,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
           NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
           NavigationDestination(icon: Icon(Icons.mic), label: 'Gravar'),
           NavigationDestination(icon: Icon(Icons.checklist), label: 'Acoes'),
+          NavigationDestination(icon: Icon(Icons.notifications), label: 'Lembretes'),
           NavigationDestination(icon: Icon(Icons.settings), label: 'Config'),
         ],
       ),

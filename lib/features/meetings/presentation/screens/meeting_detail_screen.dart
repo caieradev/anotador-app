@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../../action_items/providers/action_items_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
-import '../../data/repositories/meeting_repository.dart';
 import '../../domain/models/meeting.dart';
 import '../../providers/meetings_provider.dart';
 
@@ -55,14 +54,50 @@ class _MeetingDetailScreenState extends ConsumerState<MeetingDetailScreen>
     }
   }
 
+  String? _noteId;
+  bool _notesLoaded = false;
+
+  Future<void> _loadNotes() async {
+    if (_notesLoaded) return;
+    _notesLoaded = true;
+
+    try {
+      final client = ref.read(supabaseProvider);
+      final response = await client
+          .from('notes')
+          .select()
+          .eq('meeting_id', widget.meetingId)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      if (response != null) {
+        _noteId = response['id'] as String;
+        _notesController.text = response['content'] as String? ?? '';
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar notas: $e');
+    }
+  }
+
   Future<void> _saveNotes() async {
     if (!_notesModified) return;
 
     try {
-      final repository = ref.read(meetingRepositoryProvider);
-      await repository.updateMeeting(widget.meetingId, {
-        'notes': _notesController.text,
-      });
+      final client = ref.read(supabaseProvider);
+
+      if (_noteId != null) {
+        await client.from('notes').update({
+          'content': _notesController.text,
+        }).eq('id', _noteId!);
+      } else {
+        final response = await client.from('notes').insert({
+          'meeting_id': widget.meetingId,
+          'content': _notesController.text,
+        }).select().single();
+        _noteId = response['id'] as String;
+      }
+
       _notesModified = false;
 
       if (mounted) {
@@ -115,6 +150,7 @@ class _MeetingDetailScreenState extends ConsumerState<MeetingDetailScreen>
       ),
       data: (meeting) {
         _initAudio(meeting);
+        _loadNotes();
 
         return Scaffold(
           appBar: AppBar(
@@ -520,20 +556,6 @@ class _NotesTab extends StatefulWidget {
 }
 
 class _NotesTabState extends State<_NotesTab> {
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      _initialized = true;
-      // Load notes from meeting data (notes field may come from json)
-      // Since Meeting model doesn't have notes, we load from toJson
-      // For now, initialize empty - notes would need to be added to Meeting model
-      // or loaded separately
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(

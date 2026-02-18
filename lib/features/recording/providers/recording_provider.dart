@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../meetings/data/repositories/meeting_repository.dart';
 import '../../meetings/domain/models/meeting.dart';
@@ -159,6 +162,9 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
             updateData,
           );
 
+          // Trigger backend processing (fire-and-forget)
+          _triggerProcessing(state.meetingId!);
+
           // Clean up temp file
           if (await file.exists()) {
             await file.delete();
@@ -172,6 +178,15 @@ class RecordingNotifier extends StateNotifier<RecordingState> {
         status: RecordingStatus.error,
         errorMessage: 'Erro ao parar gravacao: $e',
       );
+    }
+  }
+
+  Future<void> _triggerProcessing(String meetingId) async {
+    try {
+      final url = '${AppConstants.backendUrl}/api/meetings/$meetingId/process';
+      await http.post(Uri.parse(url));
+    } catch (e) {
+      debugPrint('Erro ao disparar processamento: $e');
     }
   }
 

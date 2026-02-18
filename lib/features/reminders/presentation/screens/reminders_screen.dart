@@ -114,7 +114,7 @@ class _ReminderTile extends ConsumerWidget {
       child: ListTile(
         leading: Icon(statusIcon, color: statusColor),
         title: Text(
-          reminder.message,
+          reminder.description,
           style: TextStyle(
             decoration: isDismissed ? TextDecoration.lineThrough : null,
             color: isDismissed ? theme.colorScheme.onSurfaceVariant : null,

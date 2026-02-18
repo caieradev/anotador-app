@@ -14,9 +14,15 @@ class RemindersNotifier extends StateNotifier<AsyncValue<List<Reminder>>> {
     try {
       state = const AsyncLoading();
       final client = _ref.read(supabaseProvider);
+      final user = _ref.read(supabaseProvider).auth.currentUser;
+      if (user == null) {
+        state = const AsyncData([]);
+        return;
+      }
       final response = await client
           .from('reminders')
           .select('*, meetings(title)')
+          .eq('user_id', user.id)
           .order('remind_at', ascending: true);
       final items = (response as List)
           .map((json) => Reminder.fromJson(json as Map<String, dynamic>))

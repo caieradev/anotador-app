@@ -1,8 +1,7 @@
 class Reminder {
   final String id;
   final String meetingId;
-  final String? actionItemId;
-  final String message;
+  final String description;
   final DateTime remindAt;
   final String status; // 'pending', 'sent', 'dismissed'
   final DateTime createdAt;
@@ -11,8 +10,7 @@ class Reminder {
   Reminder({
     required this.id,
     required this.meetingId,
-    this.actionItemId,
-    required this.message,
+    required this.description,
     required this.remindAt,
     required this.status,
     required this.createdAt,
@@ -25,8 +23,7 @@ class Reminder {
     return Reminder(
       id: json['id'] as String,
       meetingId: json['meeting_id'] as String,
-      actionItemId: json['action_item_id'] as String?,
-      message: json['message'] as String,
+      description: json['description'] as String,
       remindAt: DateTime.parse(json['remind_at'] as String),
       status: (json['status'] as String?) ?? 'pending',
       createdAt: DateTime.parse(json['created_at'] as String),
@@ -38,8 +35,7 @@ class Reminder {
     return Reminder(
       id: id,
       meetingId: meetingId,
-      actionItemId: actionItemId,
-      message: message,
+      description: description,
       remindAt: remindAt,
       status: status ?? this.status,
       createdAt: createdAt,
