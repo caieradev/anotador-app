@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,9 +11,29 @@ import '../../features/recording/presentation/screens/recording_screen.dart';
 import '../../features/action_items/presentation/screens/action_items_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    _subscription = stream.listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authStream =
+      GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange);
+
+  ref.onDispose(() => authStream.dispose());
+
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: authStream,
     redirect: (context, state) {
       final session = Supabase.instance.client.auth.currentSession;
       final isOnLogin = state.matchedLocation == '/login';
