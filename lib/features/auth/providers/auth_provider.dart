@@ -5,7 +5,7 @@ final supabaseProvider = Provider<SupabaseClient>((ref) {
   return Supabase.instance.client;
 });
 
-final authStateProvider = StreamProvider<AuthState>((ref) {
+final authChangeProvider = StreamProvider<AuthState>((ref) {
   return ref.watch(supabaseProvider).auth.onAuthStateChange;
 });
 
@@ -13,18 +13,27 @@ final currentUserProvider = Provider<User?>((ref) {
   return ref.watch(supabaseProvider).auth.currentUser;
 });
 
-class AuthNotifier extends StateNotifier<AsyncValue<void>> {
+enum AppAuthStatus { idle, loading, signUpSuccess }
+
+class AppAuthState {
+  final AppAuthStatus status;
+  final String? error;
+
+  const AppAuthState({this.status = AppAuthStatus.idle, this.error});
+}
+
+class AuthNotifier extends StateNotifier<AppAuthState> {
   final SupabaseClient _client;
 
-  AuthNotifier(this._client) : super(const AsyncData(null));
+  AuthNotifier(this._client) : super(const AppAuthState());
 
   Future<void> signInWithEmail(String email, String password) async {
-    state = const AsyncLoading();
+    state = const AppAuthState(status: AppAuthStatus.loading);
     try {
       await _client.auth.signInWithPassword(email: email, password: password);
-      state = const AsyncData(null);
+      state = const AppAuthState();
     } catch (e) {
-      state = AsyncError(e, StackTrace.current);
+      state = AppAuthState(error: e.toString());
     }
   }
 
@@ -33,26 +42,30 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     String password,
     String name,
   ) async {
-    state = const AsyncLoading();
+    state = const AppAuthState(status: AppAuthStatus.loading);
     try {
       await _client.auth.signUp(
         email: email,
         password: password,
         data: {'name': name},
       );
-      state = const AsyncData(null);
+      state = const AppAuthState(status: AppAuthStatus.signUpSuccess);
     } catch (e) {
-      state = AsyncError(e, StackTrace.current);
+      state = AppAuthState(error: e.toString());
     }
+  }
+
+  void clearError() {
+    state = const AppAuthState();
   }
 
   Future<void> signOut() async {
     await _client.auth.signOut();
-    state = const AsyncData(null);
+    state = const AppAuthState();
   }
 }
 
 final authNotifierProvider =
-    StateNotifierProvider<AuthNotifier, AsyncValue<void>>((ref) {
+    StateNotifierProvider<AuthNotifier, AppAuthState>((ref) {
   return AuthNotifier(ref.watch(supabaseProvider));
 });

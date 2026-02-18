@@ -10,7 +10,7 @@ PODS:
   - just_audio (0.0.1):
     - Flutter
     - FlutterMacOS
-  - record_darwin (1.0.0):
+  - record_ios (1.2.0):
     - Flutter
   - shared_preferences_foundation (0.0.1):
     - Flutter
@@ -27,7 +27,7 @@ DEPENDENCIES:
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - Flutter (from `Flutter`)
   - just_audio (from `.symlinks/plugins/just_audio/darwin`)
-  - record_darwin (from `.symlinks/plugins/record_darwin/ios`)
+  - record_ios (from `.symlinks/plugins/record_ios/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - speech_to_text (from `.symlinks/plugins/speech_to_text/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
@@ -46,8 +46,8 @@ EXTERNAL SOURCES:
     :path: Flutter
   just_audio:
     :path: ".symlinks/plugins/just_audio/darwin"
-  record_darwin:
-    :path: ".symlinks/plugins/record_darwin/ios"
+  record_ios:
+    :path: ".symlinks/plugins/record_ios/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   speech_to_text:
@@ -62,7 +62,7 @@ SPEC CHECKSUMS:
   CwlCatchExceptionSupport: 54ccab8d8c78907b57f99717fb19d4cc3bce02dc
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
-  record_darwin: fb1f375f1d9603714f55b8708a903bbb91ffdb0a
+  record_ios: 412daca2350b228e698fffcd08f1f94ceb1e3844
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   speech_to_text: 3b313d98516d3d0406cea424782ec25470c59d19
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b

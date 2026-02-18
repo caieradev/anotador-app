@@ -15,13 +15,12 @@ class RecordingScreen extends ConsumerStatefulWidget {
 }
 
 class _RecordingScreenState extends ConsumerState<RecordingScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Initialize speech recognition
-    Future.microtask(() {
-      ref.read(speechProvider.notifier).initialize();
-    });
+  bool _speechInitialized = false;
+
+  Future<void> _ensureSpeechInitialized() async {
+    if (_speechInitialized) return;
+    _speechInitialized = true;
+    await ref.read(speechProvider.notifier).initialize();
   }
 
   String _formatTime(int totalSeconds) {
@@ -31,6 +30,8 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen> {
   }
 
   Future<void> _startRecording() async {
+    await _ensureSpeechInitialized();
+
     final speechNotifier = ref.read(speechProvider.notifier);
     final recordingNotifier = ref.read(recordingProvider.notifier);
     final speechState = ref.read(speechProvider);

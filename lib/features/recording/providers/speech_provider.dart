@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -50,27 +51,34 @@ class SpeechNotifier extends StateNotifier<SpeechState> {
         super(const SpeechState());
 
   Future<void> initialize() async {
-    final available = await _speech.initialize(
-      onError: (error) {
-        // If we get a "no match" error while listening, restart listening
-        if (error.errorMsg == 'error_no_match' &&
-            state.status == SpeechStatus.listening) {
-          _restartListening();
-          return;
-        }
-        state = state.copyWith(status: SpeechStatus.available);
-      },
-      onStatus: (status) {
-        if (status == 'done' && state.status == SpeechStatus.listening) {
-          // Commit current words and restart listening
-          _commitCurrentWords();
-          _restartListening();
-        }
-      },
-    );
+    try {
+      final available = await _speech.initialize(
+        onError: (error) {
+          // If we get a "no match" error while listening, restart listening
+          if (error.errorMsg == 'error_no_match' &&
+              state.status == SpeechStatus.listening) {
+            _restartListening();
+            return;
+          }
+          if (mounted) {
+            state = state.copyWith(status: SpeechStatus.available);
+          }
+        },
+        onStatus: (status) {
+          if (status == 'done' && state.status == SpeechStatus.listening) {
+            // Commit current words and restart listening
+            _commitCurrentWords();
+            _restartListening();
+          }
+        },
+      );
 
-    if (available) {
-      state = state.copyWith(status: SpeechStatus.available);
+      if (available && mounted) {
+        state = state.copyWith(status: SpeechStatus.available);
+      }
+    } catch (e) {
+      // Speech not available on this device - that's ok
+      debugPrint('Speech init error: $e');
     }
   }
 

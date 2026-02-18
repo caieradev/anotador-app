@@ -32,6 +32,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _isSignUp = !_isSignUp;
     });
     _formKey.currentState?.reset();
+    ref.read(authNotifierProvider.notifier).clearError();
   }
 
   Future<void> _submit() async {
@@ -52,22 +53,80 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
-    final isLoading = authState is AsyncLoading;
+    final isLoading = authState.status == AppAuthStatus.loading;
     final theme = Theme.of(context);
 
-    ref.listen<AsyncValue<void>>(authNotifierProvider, (previous, next) {
-      next.whenOrNull(
-        error: (error, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error.toString()),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: theme.colorScheme.error,
-            ),
-          );
-        },
-      );
+    // Show error snackbar
+    ref.listen<AppAuthState>(authNotifierProvider, (previous, next) {
+      if (next.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: theme.colorScheme.error,
+          ),
+        );
+      }
     });
+
+    // Show email confirmation screen
+    if (authState.status == AppAuthStatus.signUpSuccess) {
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.mark_email_read_outlined,
+                      size: 80,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Verifique seu email',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Enviamos um link de confirmacao para\n${_emailController.text.trim()}',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Clique no link do email e depois volte aqui para entrar.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    FilledButton(
+                      onPressed: () {
+                        ref.read(authNotifierProvider.notifier).clearError();
+                        setState(() {
+                          _isSignUp = false;
+                        });
+                      },
+                      child: const Text('Voltar para login'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       body: SafeArea(
