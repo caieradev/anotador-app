@@ -72,7 +72,10 @@ class MeetingCard extends StatelessWidget {
               ),
 
               // Status chip
-              _StatusChip(status: meeting.status),
+              _StatusChip(
+                status: meeting.status,
+                progress: meeting.progress,
+              ),
             ],
           ),
         ),
@@ -97,18 +100,45 @@ class MeetingCard extends StatelessWidget {
 
 class _StatusChip extends StatelessWidget {
   final String status;
+  final int progress;
 
-  const _StatusChip({required this.status});
+  const _StatusChip({required this.status, this.progress = 0});
 
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
       'recording' => ('Gravando', Colors.orange),
-      'processing' => ('Processando', Colors.blue),
+      'processing' => ('$progress%', Colors.blue),
       'completed' => ('Concluido', Colors.green),
       'failed' => ('Erro', Colors.red),
       _ => (status, Colors.grey),
     };
+
+    if (status == 'processing') {
+      return SizedBox(
+        width: 48,
+        height: 48,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            CircularProgressIndicator(
+              value: progress > 0 ? progress / 100 : null,
+              strokeWidth: 3,
+              color: color,
+              backgroundColor: color.withValues(alpha: 0.12),
+            ),
+            Text(
+              '$progress%',
+              style: TextStyle(
+                color: color,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

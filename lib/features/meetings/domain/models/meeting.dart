@@ -12,6 +12,7 @@ class Meeting {
   final String? rawTranscript;
   final String? refinedTranscript;
   final String? summary;
+  final int progress;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -29,6 +30,7 @@ class Meeting {
     this.rawTranscript,
     this.refinedTranscript,
     this.summary,
+    this.progress = 0,
     required this.createdAt,
     this.updatedAt,
   });
@@ -50,6 +52,7 @@ class Meeting {
       rawTranscript: json['raw_transcript'] as String?,
       refinedTranscript: json['refined_transcript'] as String?,
       summary: json['summary'] as String?,
+      progress: (json['progress'] as int?) ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
@@ -71,6 +74,7 @@ class Meeting {
         'raw_transcript': rawTranscript,
         'refined_transcript': refinedTranscript,
         'summary': summary,
+        'progress': progress,
       };
 
   Meeting copyWith({
@@ -87,6 +91,7 @@ class Meeting {
     String? rawTranscript,
     String? refinedTranscript,
     String? summary,
+    int? progress,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -104,6 +109,7 @@ class Meeting {
       rawTranscript: rawTranscript ?? this.rawTranscript,
       refinedTranscript: refinedTranscript ?? this.refinedTranscript,
       summary: summary ?? this.summary,
+      progress: progress ?? this.progress,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
